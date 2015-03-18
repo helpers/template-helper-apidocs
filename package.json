@@ -1,0 +1,58 @@
+{
+  "name": "template-helper-apidocs",
+  "description": "Template helper for automatically generating API docs from code comments. This is an async helper that is only compatible with applications built with Template, like Verb, Assemble, or Template directly.",
+  "version": "0.2.0",
+  "homepage": "https://github.com/jonschlinkert/template-helper-apidocs",
+  "author": {
+    "name": "Jon Schlinkert",
+    "url": "https://github.com/jonschlinkert"
+  },
+  "repository": "jonschlinkert/template-helper-apidocs",
+  "bugs": {
+    "url": "https://github.com/jonschlinkert/template-helper-apidocs/issues"
+  },
+  "license": {
+    "type": "MIT",
+    "url": "https://github.com/jonschlinkert/template-helper-apidocs/blob/master/LICENSE"
+  },
+  "files": [
+    "index.js"
+  ],
+  "main": "index.js",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "async": "^0.9.0",
+    "extend-shallow": "^1.1.2",
+    "extract-gfm": "^0.1.0",
+    "globby": "^1.2.0",
+    "is-glob": "^1.1.3",
+    "js-comments": "^0.3.9",
+    "relative": "^2.0.0"
+  },
+  "devDependencies": {
+    "handlebars": "^3.0.0",
+    "helper-resolve": "^0.2.0",
+    "lodash": "^3.3.0",
+    "should": "^5.0.1",
+    "template": "^0.10.1",
+    "verb": "^0.5.0"
+  },
+  "keywords": [
+    "api",
+    "api-docs",
+    "apidocs",
+    "code",
+    "comment",
+    "comments",
+    "docs",
+    "documentation",
+    "generate",
+    "helper",
+    "helpers"
+  ]
+}
