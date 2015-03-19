@@ -1,6 +1,6 @@
 {
   "name": "template-helper-apidocs",
-  "description": "Template helper for automatically generating API docs from code comments. This is an async helper that is only compatible with applications built with Template, like Verb, Assemble, or Template directly.",
+  "description": "Template helper for automatically generating API docs from code comments. This is based on helper-apidocs, but specifically for applications built-with the Template library.",
   "version": "0.2.0",
   "homepage": "https://github.com/jonschlinkert/template-helper-apidocs",
   "author": {

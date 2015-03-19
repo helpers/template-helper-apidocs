@@ -1,6 +1,8 @@
 # template-helper-apidocs [![NPM version](https://badge.fury.io/js/template-helper-apidocs.svg)](http://badge.fury.io/js/template-helper-apidocs)  [![Build Status](https://travis-ci.org/jonschlinkert/template-helper-apidocs.svg)](https://travis-ci.org/jonschlinkert/template-helper-apidocs) 
 
-> Template helper for automatically generating API docs from code comments. This is an async helper that is only compatible with applications built with Template, like Verb, Assemble, or Template directly.
+> Template helper for automatically generating API docs from code comments.
+
+**Heads up!** This is an async helper that is only compatible with applications built with [Template][template], such as [verb], [assemble], or of course Template directly.
 
 ## Install with [npm](npmjs.org)
 
@@ -36,6 +38,7 @@ Install dev dependencies.
 ```bash
 npm i -d && npm test
 ```
+
 
 See [the tests](./test.js) for actual usage examples.
 
