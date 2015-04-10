@@ -10,7 +10,7 @@
 var obj = {};
 
 /**
- * <%= resolve("helper-resolve") %>
+ * <%= resolve("is-glob") %>
  * a<%= apidocs("fixtures/b.js") %>
  *
  * ```js
