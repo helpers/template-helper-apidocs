@@ -7,80 +7,77 @@
 
 'use strict';
 
+/* deps:mocha */
 require('should');
 var path = require('path');
 var handlebars = require('handlebars');
+var relative = require('relative');
 var Template = require('template');
 var _ = require('lodash');
 var apidocs = require('./');
-var template, helper;
+var template;
+
 
 function resolve(fp, next) {
-  next(null, resolveSync(fp));
-}
-
-function resolveSync(fp, next) {
   var pkg = path.resolve('node_modules', fp, 'package.json');
-  var obj = require(pkg);
-  var main = obj && obj.main;
-  return path.resolve(path.dirname(pkg), main);
+  try {
+    var obj = require(pkg);
+    var main = obj && obj.main;
+    return relative(path.resolve(path.dirname(pkg), main));
+  } catch(err) {
+    console.log(err);
+  }
+  return null;
 }
 
 describe('helper apidocs', function () {
-  beforeEach(function (cb) {
+  beforeEach(function () {
     template = new Template();
+    template.engine('*', require('engine-lodash'));
     template.option('escapeDelims', ['<%%=']);
-    helper = apidocs(template);
-    template.asyncHelper('apidocs', helper);
-    template.asyncHelper('resolve', resolve);
-    cb();
+    template.helper('apidocs', apidocs);
+    template.helper('resolve', resolve);
   });
 
-  it('should work with Template:', function (done) {
+  it('should work with Template:', function (cb) {
+    template.page('docs', {content: '<%= apidocs("fixtures/b.js") %>'});
+    var tmpl = template.getPage('docs');
+
+    template.render(tmpl, function (err, content) {
+      if (err) return cb(err);
+      content.should.match(/### \[\.bbb\]/);
+      cb();
+    });
+  });
+
+  it('should resolve nested templates:', function (cb) {
     template.page('docs', {content: '<%= apidocs("fixtures/a.js") %>'});
     var tmpl = template.getPage('docs');
 
     template.render(tmpl, function (err, content) {
-      if (err) return done(err);
-      content.should.match(/### \[\.aaa\]/);
-      done();
+      if (err) return cb(err);
+      content.should.match(/node_modules/);
+      cb();
     });
   });
 
-  it('should resolve nested templates:', function (done) {
+  it('should replace escaped templates with non-characters:', function (cb) {
     template.page('docs', {content: '<%= apidocs("fixtures/a.js") %>'});
     var tmpl = template.getPage('docs');
 
     template.render(tmpl, function (err, content) {
-      if (err) return done(err);
-      content.should.match(/node_modules/i);
-      done();
+      if (err) return cb(err);
+      content.should.match(/<%= whatever %>/);
+      cb();
     });
   });
 
-  it('should replace escaped templates with non-characters:', function (done) {
-    template.page('docs', {content: '<%= apidocs("fixtures/a.js") %>'});
-    var tmpl = template.getPage('docs');
-
-    template.render(tmpl, function (err, content) {
-      if (err) return done(err);
-      content.should.match(/<%=\s*whatever\s*%>/gi);
-      done();
-    });
+  it('should generate API docs from the given file:', function () {
+    apidocs("fixtures/a.js").should.match(/### \[\.aaa\]/);
   });
 
-  it('should generate API docs from the given file:', function (done) {
-    helper("fixtures/a.js", function (err, content) {
-      content.should.match(/### \[\.aaa\]/);
-      done()
-    });
-  });
-
-  it('should generate API docs from a glob of files:', function (done) {
-    helper("fixtures/*.js", function (err, content) {
-      content.should.match(/### \[\.aaa\]/);
-      content.should.match(/### \[\.ddd\]/);
-      done();
-    });
+  it('should generate API docs from a glob of files:', function () {
+    apidocs("fixtures/*.js").should.match(/### \[\.aaa\]/);
+    apidocs("fixtures/*.js").should.match(/### \[\.ddd\]/);
   });
 });
