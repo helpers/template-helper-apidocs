@@ -11,25 +11,16 @@
  * Module dependencies
  */
 
-var path = require('path');
+var fs = require('fs');
 var glob = require('globby');
-var async = require('async');
-var isGlob = require('is-glob');
-var relative = require('relative');
 var comments = require('js-comments');
-var extend = require('extend-shallow');
-var extract = require('extract-gfm');
+var isGlob = require('is-glob');
 
 /**
- * Expose `apidocs` helper
- */
-
-module.exports = apidocs;
-
-/**
- * Generate API docs from code comments in the JavaScript
- * files that match the given `patterns`. Only code comments
- * with `@api public` are rendered.
+ * Generate API docs from code comments for any JavaScript
+ * files that match the given `patterns`.
+ *
+ * **Only code comments with `@api public` will be rendered.**
  *
  * @param  {String} `patterns`
  * @param  {Object} `options`
@@ -37,72 +28,29 @@ module.exports = apidocs;
  * @api public
  */
 
-function apidocs(app) {
-  app.create('apidoc', {isRenderable: true, isPartial: true });
-  app.option('renameKey', false);
+module.exports = function apidocs(patterns, opts) {
+  opts = opts || {};
+  opts.file = opts.file || {};
 
-  var appDelims = app.delims['.*'].original;
+  var delims = opts.escapeDelims || ['<%%', '<%'];
+  var files = isGlob ? glob.sync(patterns, opts) : [patterns];
+  var dest = opts && opts.dest || 'README.md';
+  var len = files.length, i = 0;
+  var res = '';
 
-  return function (patterns, options, cb) {
-    if (typeof patterns === 'object' && !Array.isArray(patterns)) {
-      cb = options; options = patterns; patterns = null;
-    }
+  while (len--) {
+    var fp = files[i++];
+    var str = fs.readFileSync(fp, 'utf8');
+    var arr = comments.parse(str);
+    opts.file.path = fp;
+    res += comments.render(arr, opts);
+  }
 
-    if (typeof options === 'function') {
-      cb = options; options = {};
-    }
-
-    var opts = extend({sep: '\n', dest: 'README.md'}, options);
-    opts.cwd = path.resolve(opts.cwd || app.option('cwd') || process.cwd());
-    var delims = opts.escapeDelims || appDelims || ['<%=', '%>'];
-    var dest = opts.dest;
-
-    if (dest && dest.indexOf('://') === -1) {
-      dest = relative(dest);
-    }
-
-    if (!patterns) {
-      patterns = path.join(opts.cwd, '*.js');
-    }
-
-    if (!isGlob(patterns)) {
-      var fp = path.join(opts.cwd, patterns);
-      return renderFile(app, delims, fp, dest, opts, cb);
-    }
-
-    glob(patterns, opts, function(err, files) {
-      async.mapSeries(files, function(fp, next) {
-        renderFile(app, delims, fp, dest, opts, next);
-      }, function (err, arr) {
-        if (err) return cb(err);
-        cb(null, arr.join('\n'));
-      });
-    });
-  };
-}
-
-
-function renderFile(app, delims, fp, dest, opts, next) {
-  var res = headings(comments(fp, dest, opts));
-  var delim = delims[0];
-
-  // protect escaped template variables
-  res = res.split(delim + '%').join('__DELIM__');
-
-  app.apidoc({ path: fp, content: res, ext: '.md', engine: '.md' });
-  var file = app.views.apidocs[fp];
-
-  app.render(file, opts, function (err, content) {
-    if (err) return next(err);
-
-    // replace escaped template variables
-    next(null, content.split('__DELIM__').join(delim));
-  });
-}
-
-function headings(str, lvl) {
-  var o = extract.parseBlocks(str);
-  lvl = lvl ? '######'.substr(lvl + 2) : '##';
-  o.text = o.text.replace(/^#/gm, lvl);
-  return extract.injectBlocks(o.text, o.blocks);
-}
+  res = comments.format(res);
+  if (this && this.app) {
+    res = res.split(delims[0]).join('__DELIM__');
+    res = this.app.render(res, opts);
+    res = res.split('__DELIM__').join(delims[1]);
+  }
+  return res;
+};
