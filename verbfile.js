@@ -5,7 +5,7 @@ var verb = require('verb');
  * it's used here for example purposes.
  */
 
-verb.asyncHelper('apidocs', require('./'));
+verb.helper('apidocs', require('./'));
 
 verb.task('default', function () {
   verb.src('.verb.md')
