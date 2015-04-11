@@ -14,7 +14,9 @@
 var fs = require('fs');
 var glob = require('globby');
 var comments = require('js-comments');
+var relative = require('relative');
 var isGlob = require('is-glob');
+var merge = require('mixin-deep');
 
 /**
  * Generate API docs from code comments for any JavaScript
@@ -29,28 +31,53 @@ var isGlob = require('is-glob');
  */
 
 module.exports = function apidocs(patterns, opts) {
-  opts = opts || {};
+  opts = merge({}, this && this.options, opts);
   opts.file = opts.file || {};
 
-  var delims = opts.escapeDelims || ['<%%', '<%'];
+  var delims = opts.escapeDelims;
   var files = isGlob ? glob.sync(patterns, opts) : [patterns];
   var dest = opts && opts.dest || 'README.md';
   var len = files.length, i = 0;
   var res = '';
 
+  if (this && this.app) {
+    opts = bindHelpers(this.app, opts);
+  }
   while (len--) {
     var fp = files[i++];
     var str = fs.readFileSync(fp, 'utf8');
-    var arr = comments.parse(str);
-    opts.file.path = fp;
+    var arr = comments.parse(str, opts);
+    var checked, n = 0;
+
+    arr = arr.filter(function (ele, i) {
+      n = n || 0;
+      if (!checked && /Copyright/.test(ele.description) && i === 0) {
+        checked = true;
+        n++;
+      }
+      if (opts.skipFirst && i === n) return false;
+      return true;
+    });
+
+    opts.file.path = opts.file.path || fp;
+    if (opts.file.path.indexOf('//') === -1) {
+      opts.file.path = relative(opts.file.path);
+    }
+
     res += comments.render(arr, opts);
   }
 
   res = comments.format(res);
   if (this && this.app) {
-    res = res.split(delims[0]).join('__DELIM__');
+    res = res.split(delims[0] || '<%%=').join('__DELIM__');
     res = this.app.render(res, opts);
-    res = res.split('__DELIM__').join(delims[1]);
+    res = res.split('__DELIM__').join(delims[1] || '<%=');
   }
   return res;
 };
+
+function bindHelpers(thisArg, opts) {
+  thisArg.bindHelpers.call(thisArg, opts, thisArg.context, false);
+  opts.imports = opts.helpers;
+  return opts;
+}
