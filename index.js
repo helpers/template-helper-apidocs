@@ -16,6 +16,7 @@ var glob = require('globby');
 var comments = require('js-comments');
 var relative = require('relative');
 var isGlob = require('is-glob');
+var clone = require('clone-deep');
 var merge = require('mixin-deep');
 
 /**
@@ -33,38 +34,31 @@ var merge = require('mixin-deep');
 module.exports = function apidocs(patterns, opts) {
   opts = merge({}, this && this.options, opts);
   opts.file = opts.file || {};
+  opts.dest = opts.dest || 'README.md';
 
   var delims = opts.escapeDelims;
   var files = isGlob ? glob.sync(patterns, opts) : [patterns];
-  var dest = opts && opts.dest || 'README.md';
   var len = files.length, i = 0;
   var res = '';
 
   if (this && this.app) {
     opts = bindHelpers(this.app, opts);
   }
+
   while (len--) {
     var fp = files[i++];
     var str = fs.readFileSync(fp, 'utf8');
     var arr = comments.parse(str, opts);
     var checked, n = 0;
 
-    arr = arr.filter(function (ele, i) {
-      n = n || 0;
-      if (!checked && /Copyright/.test(ele.description) && i === 0) {
-        checked = true;
-        n++;
-      }
-      if (opts.skipFirst && i === n) return false;
-      return true;
-    });
+    arr = filter(arr, opts, checked, n);
 
-    opts.file.path = opts.file.path || fp;
-    if (opts.file.path.indexOf('//') === -1) {
-      opts.file.path = relative(opts.file.path);
+    var ctx = clone(opts);
+    ctx.file.path = ctx.file.path || fp;
+    if (ctx.file.path.indexOf('//') === -1) {
+      ctx.file.path = relative(opts.dest, ctx.file.path);
     }
-
-    res += comments.render(arr, opts);
+    res += comments.render(arr, ctx);
   }
 
   res = comments.format(res);
@@ -75,6 +69,18 @@ module.exports = function apidocs(patterns, opts) {
   }
   return res;
 };
+
+function filter(arr, opts, checked, n) {
+  return arr.filter(function (ele, i) {
+    n = n || 0;
+    if (!checked && /Copyright/.test(ele.description) && i === 0) {
+      checked = true;
+      n++;
+    }
+    if (opts.skipFirst && i === n) return false;
+    return true;
+  });
+}
 
 function bindHelpers(thisArg, opts) {
   thisArg.bindHelpers.call(thisArg, opts, thisArg.context, false);
