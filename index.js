@@ -22,13 +22,18 @@ var merge = require('mixin-deep');
 
 /**
  * Generate API docs from code comments for any JavaScript
- * files that match the given `patterns`.
+ * files that match the given `patterns`. Note that **only code
+ * comments with `@api public` will be rendered.**
  *
- * **Only code comments with `@api public` will be rendered.**
+ * **Example**
  *
- * @param  {String} `patterns`
- * @param  {Object} `options`
- * @return {String}
+ * ```js
+ * apidocs("index.js");
+ * ```
+ *
+ * @param  {String} `patterns` Glob patterns for files with code comments to render.
+ * @param  {Object} `options` Options to pass to [js-comments].
+ * @return {String} Markdown-formatted API documentation
  * @api public
  */
 
