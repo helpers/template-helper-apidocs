@@ -13,6 +13,7 @@
 
 var fs = require('fs');
 var glob = require('globby');
+var bindHelpers = require('template-bind-helpers');
 var comments = require('js-comments');
 var relative = require('relative');
 var isGlob = require('is-glob');
@@ -42,7 +43,7 @@ module.exports = function apidocs(patterns, opts) {
   var res = '';
 
   if (this && this.app) {
-    opts = bindHelpers(this.app, opts);
+    opts = bindHelpers(this.app, opts, false);
   }
 
   while (len--) {
@@ -80,10 +81,4 @@ function filter(arr, opts, checked, n) {
     if (opts.skipFirst && i === n) return false;
     return true;
   });
-}
-
-function bindHelpers(thisArg, opts) {
-  thisArg.bindHelpers.call(thisArg, opts, thisArg.context, false);
-  opts.imports = opts.helpers;
-  return opts;
 }
