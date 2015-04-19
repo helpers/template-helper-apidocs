@@ -41,6 +41,7 @@ module.exports = function apidocs(patterns, opts) {
   opts = merge({}, this && this.options, opts);
   opts.file = opts.file || {};
   opts.dest = opts.dest || 'README.md';
+  opts.cwd = opts.cwd || process.cwd();
 
   var delims = opts.escapeDelims;
   var files = isGlob ? glob.sync(patterns, opts) : [patterns];
