@@ -38,12 +38,14 @@ var merge = require('mixin-deep');
  */
 
 module.exports = function apidocs(patterns, opts) {
-  opts = merge({}, this && this.options, opts);
+  var options = (this && this.options) || {};
+  opts = merge({}, options, options.apidocs, opts);
+
   opts.file = opts.file || {};
   opts.dest = opts.dest || 'README.md';
   opts.cwd = opts.cwd || process.cwd();
 
-  var delims = opts.escapeDelims;
+  var delims = opts.escapeDelims || ['<%%=', '<%='];
   var files = isGlob ? glob.sync(patterns, opts) : [patterns];
   var len = files.length, i = 0;
   var res = '';
