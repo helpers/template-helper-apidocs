@@ -1,7 +1,7 @@
 {
   "name": "template-helper-apidocs",
   "description": "Template helper for automatically generating API docs from code comments. This is based on helper-apidocs, but specifically for applications built-with the Template library.",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "homepage": "https://github.com/helpers/template-helper-apidocs",
   "author": {
     "name": "Jon Schlinkert",
