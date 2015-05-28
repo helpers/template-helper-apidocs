@@ -52,6 +52,7 @@ module.exports = function apidocs(patterns, opts) {
 
   if (this && this.app) {
     opts = bindHelpers(this.app, opts, false);
+    opts.examples = this.app.cache.data.examples || {};
   }
 
   while (len--) {
