@@ -1,10 +1,3 @@
-/*!
- * template-helper-apidocs <https://github.com/jonschlinkert/template-helper-apidocs>
- *
- * Copyright (c) 2014-2015, Jon Schlinkert.
- * Licensed under the MIT License.
- */
-
 'use strict';
 
 /**
@@ -12,6 +5,7 @@
  */
 
 var fs = require('fs');
+var path = require('path');
 var glob = require('globby');
 var bindHelpers = require('template-bind-helpers');
 var comments = require('js-comments');
@@ -19,6 +13,7 @@ var relative = require('relative');
 var isGlob = require('is-glob');
 var clone = require('clone-deep');
 var merge = require('mixin-deep');
+var fileCache = {};
 
 /**
  * Generate API docs from code comments for any JavaScript
@@ -46,13 +41,14 @@ module.exports = function apidocs(patterns, opts) {
   opts.cwd = opts.cwd || process.cwd();
 
   var delims = opts.escapeDelims || ['<%%=', '<%='];
-  var files = isGlob ? glob.sync(patterns, opts) : [patterns];
+  var files = cache(patterns, opts);
   var len = files.length, i = 0;
-  var res = '';
+  var res = '', context = {};
 
   if (this && this.app) {
     opts = bindHelpers(this.app, opts, false);
     opts.examples = this.app.cache.data.examples || {};
+    context = this.context;
   }
 
   while (len--) {
@@ -64,10 +60,10 @@ module.exports = function apidocs(patterns, opts) {
     arr = filter(arr, opts, checked, n);
 
     var ctx = clone(opts);
-    ctx.file.path = ctx.file.path || fp;
-    if (ctx.file.path.indexOf('//') === -1) {
-      ctx.file.path = relative(opts.dest, ctx.file.path);
-    }
+    ctx.file = ctx.file || {};
+    ctx.file.path = normalize(ctx.file.path, fp, opts.dest);
+    ctx.data = context;
+
     res += comments.render(arr, ctx);
   }
 
@@ -79,6 +75,30 @@ module.exports = function apidocs(patterns, opts) {
   }
   return res;
 };
+
+function cache(patterns, opts) {
+  opts = opts || {};
+  var key = patterns.toString();
+  if (fileCache.hasOwnProperty(key)) {
+    return fileCache[key];
+  }
+  var files = isGlob(patterns)
+    ? glob.sync(patterns, opts)
+    : [patterns];
+
+  files = files.map(function (fp) {
+    return path.join(opts.cwd, fp);
+  });
+  return (fileCache[key] = files);
+}
+
+function normalize(fp, fallback, dest) {
+  fp = fp || fallback;
+  if (fp.indexOf('//') === -1) {
+    return relative(dest, fp);
+  }
+  return fp;
+}
 
 function filter(arr, opts, checked, n) {
   return arr.filter(function (ele, i) {
