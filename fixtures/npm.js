@@ -10,7 +10,7 @@
 var obj = {};
 
 /**
- * <%= apidocs(resolve("helper-resolve")) %>
+ * <%= apidocs(resolve("is-glob")) %>
  * @api public
  */
 

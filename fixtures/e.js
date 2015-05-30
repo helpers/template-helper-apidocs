@@ -11,7 +11,7 @@ var obj = {};
 
 /**
  * LAST
- * <%= apidocs("npm") %>
+ * <%= apidocs("fixtures/npm.js") %>
  * @api public
  */
 
